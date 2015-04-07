@@ -4,11 +4,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main() {
+int main(int argc, char **argv) {
 	int out_fds[2];
 	int err_fds[2];
 	int status;
 	pid_t pid;
+
+	if (argc < 2) {
+		printf("Usage: %s <command> [command arguments...]\n", argv[0]);
+		return EXIT_FAILURE;
+	}
 
 	status = pipe(out_fds);
 	if (status == -1) {
@@ -36,7 +41,7 @@ int main() {
 		dup2(out_fds[1], STDOUT_FILENO);
 		dup2(err_fds[1], STDERR_FILENO);
 
-		execlp("find", "find", "/root", NULL);
+		execvp(argv[1], &argv[1]);
 	} else {
 		/* parent process */
 		struct epoll_event ev, events[2];
