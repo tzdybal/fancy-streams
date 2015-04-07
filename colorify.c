@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 		/* parent process */
 		struct epoll_event ev, events[2];
 		int epollfd;
-		int eofs = 0;
+		int fds = 2;
 
 		close(out_fds[1]);
 		close(err_fds[1]);
@@ -61,9 +61,9 @@ int main(int argc, char **argv) {
 		ev.data.fd = err_fds[0];
 		epoll_ctl(epollfd, EPOLL_CTL_ADD, err_fds[0], &ev);
 
-		while (eofs < 2) {
+		while (fds > 0) {
 			int n;
-			int nfds = epoll_wait(epollfd, events, 2, -1);
+			int nfds = epoll_wait(epollfd, events, fds, -1);
 
 			for (n = 0; n < nfds; ++n) {
 				int color = 32;
@@ -76,7 +76,8 @@ int main(int argc, char **argv) {
 						color = 31;
 					printf("\033[0;%dm%s\033[0m", color, buf);
 				} else {
-					++eofs;
+					epoll_ctl(epollfd, EPOLL_CTL_DEL, events[n].data.fd, NULL);
+					--fds;
 				}
 			}
 		}
